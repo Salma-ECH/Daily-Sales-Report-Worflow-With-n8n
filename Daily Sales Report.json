@@ -1,0 +1,325 @@
+{
+  "name": "Daily Sales Report",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "2RUokSxoimf6Td6O",
+          "mode": "list",
+          "cachedResultName": "orders1",
+          "cachedResultUrl": "/projects/wwdoL7xK08zGJv3S/datatables/2RUokSxoimf6Td6O"
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        96,
+        0
+      ],
+      "id": "ee0bb928-ffc2-415f-ba90-7bc7364117af",
+      "name": "GetOrders"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a03154af-45fd-4d93-b0ae-6fde77dd065f",
+              "leftValue": "={{ $json.orderStatus }}",
+              "rightValue": "booked",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "4f0d9789-0c40-4625-a77b-a8717f92df9d",
+              "leftValue": "={{ $json.timeDifference.days }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        496,
+        0
+      ],
+      "id": "8ed10101-e428-420f-bf18-b97ce1db8262",
+      "name": "OnlyYesterdayBookedOrders"
+    },
+    {
+      "parameters": {
+        "fieldsToSummarize": {
+          "values": [
+            {
+              "aggregation": "sum",
+              "field": "orderPrice"
+            },
+            {
+              "field": "orderID"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.summarize",
+      "typeVersion": 1.1,
+      "position": [
+        688,
+        0
+      ],
+      "id": "53163bb9-8ec3-463b-87d1-b31d57b2bfee",
+      "name": "CountAndSumOrders"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "42eac3ce-7107-45c3-ba63-8033660f3fac",
+              "leftValue": "={{ $json.sum_orderPrice }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        864,
+        0
+      ],
+      "id": "3d292303-20fc-4f43-a024-3ac48b9a89fe",
+      "name": "CeckOrdersRevenue"
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "=⚠️ Daily Sales Report\n\nNo booked orders were recorded yesterday.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        1056,
+        176
+      ],
+      "id": "dd30454a-de66-44f9-b035-7e29c5140d86",
+      "name": "NoRevenuNote",
+      "webhookId": "7f350275-2794-4fcc-9468-a41bf105b01b",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "s7CBx4AmBPCWcY4R",
+          "name": "n8n Quickstart S2 Discord Webhook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "=Daily Sales Repo\n\nBooked Orders: {{ $('CeckOrdersRevenue').item.json.count_orderID }}\nTotal Revenue: {{ $json.sum_orderPrice }}\n\nGenerated automatically by n8n. ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        1072,
+        -16
+      ],
+      "id": "a9d38094-f3d7-4991-9686-698496533d05",
+      "name": "SendReport",
+      "webhookId": "59f8cd35-5909-446b-9a79-3fc1c4f23eb9",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "s7CBx4AmBPCWcY4R",
+          "name": "n8n Quickstart S2 Discord Webhook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -112,
+        48
+      ],
+      "id": "d7346491-445e-4cbd-a627-6265b9843e11",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "formatDate",
+        "date": "={{ $json.createdAt }}",
+        "format": "yyyy/MM/dd",
+        "outputFieldName": "CreatedAtDate",
+        "options": {
+          "includeInputFields": true
+        }
+      },
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        256,
+        0
+      ],
+      "id": "0cb6eac1-f477-4432-a558-9bcf253e9f4c",
+      "name": "Date & Time"
+    },
+    {
+      "parameters": {
+        "operation": "getTimeBetweenDates",
+        "startDate": "={{ $json.CreatedAtDate }}",
+        "endDate": "={{ $now.format('yyyy-MM-dd')}}",
+        "options": {
+          "includeInputFields": true
+        }
+      },
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        384,
+        224
+      ],
+      "id": "de6979c0-7128-4970-a0c9-7abaa50f3db9",
+      "name": "Date & Time1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "GetOrders": {
+      "main": [
+        [
+          {
+            "node": "Date & Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OnlyYesterdayBookedOrders": {
+      "main": [
+        [
+          {
+            "node": "CountAndSumOrders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CountAndSumOrders": {
+      "main": [
+        [
+          {
+            "node": "CeckOrdersRevenue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CeckOrdersRevenue": {
+      "main": [
+        [
+          {
+            "node": "SendReport",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "NoRevenuNote",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "GetOrders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Date & Time": {
+      "main": [
+        [
+          {
+            "node": "Date & Time1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Date & Time1": {
+      "main": [
+        [
+          {
+            "node": "OnlyYesterdayBookedOrders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "a8147e91-9ed4-4890-9721-d314294802b7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1c5d83dcf2837c5c0b30ea27897c587f3557d43f828eb309520227db1354081c"
+  },
+  "nodeGroups": [],
+  "id": "Rdny0tWq0eVp60Kq",
+  "tags": []
+}
