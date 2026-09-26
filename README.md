@@ -12,6 +12,8 @@ An n8n workflow that automatically generates a daily sales report and sends it t
 ## Workflow
 Schedule Trigger → Get Orders → Filter → Summarize → IF → Discord
 
+![Daily Sales Report Automation](DailySalesReportWorflow.png)
+
 ## Tech Stack
 - n8n
 - Data Tables
